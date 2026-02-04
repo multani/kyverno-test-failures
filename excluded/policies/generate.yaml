@@ -1,0 +1,47 @@
+apiVersion: policies.kyverno.io/v1
+kind: GeneratingPolicy
+metadata:
+  name: generate-foo-configmap
+spec:
+  evaluation:
+    synchronize:
+      enabled: true
+    generateExisting:
+      enabled: true
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [""]
+        operations: ["CREATE", "UPDATE"]
+        apiVersions: ["v1"]
+        resources: ["namespaces"]
+
+  variables:
+    - name: targetNamespace
+      expression: object.metadata.name
+
+    - name: labelFoo
+      expression: object.metadata.labels["foo"]
+
+    - name: downstream
+      expression: |-
+        [
+          {
+            "kind": dyn("ConfigMap"),
+            "apiVersion": dyn("v1"),
+            "metadata": dyn({
+              "namespace": string(variables.targetNamespace),
+              "name": "test",
+            }),
+            "data": dyn({
+              "foo-value": string(variables.labelFoo)
+            })
+          }
+        ]
+
+
+  generate:
+    - expression: |-
+        generator.Apply(
+          variables.targetNamespace,
+          variables.downstream
+        )
