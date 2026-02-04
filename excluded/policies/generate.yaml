@@ -20,7 +20,7 @@ spec:
       expression: object.metadata.name
 
     - name: labelFoo
-      expression: object.metadata.labels["foo"]
+      expression: object.metadata.labels["fooxx"]
 
     - name: downstream
       expression: |-
